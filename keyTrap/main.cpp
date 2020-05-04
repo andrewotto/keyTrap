@@ -4,6 +4,8 @@
 #include <iostream>
 #include <time.h>
 
+using namespace std;
+
 //time between keypresses
 #define SLEEP_DUR_MS 100
 #define LAUGH_SLEEP_MS 3000
@@ -20,7 +22,9 @@
 #define KK_8  0x38
 #define KK_9  0x38
 #define KK_C  0x43
+#define KK_X  0x58
 
+//voices
 //page 1
 std::vector<WORD> vYes{ KK_C, KK_1 };
 std::vector<WORD> vNo{ KK_C, KK_2 };
@@ -42,10 +46,39 @@ std::vector<WORD> vFollow{ KK_C, KK_C, KK_C, KK_3 };
 std::vector<WORD> vRespect{ KK_C, KK_C, KK_C, KK_4 };
 std::vector<WORD> vCharge{ KK_C, KK_C, KK_C, KK_5 };
 
+//emotes
+//page 1
+std::vector<WORD> vFlourish{ KK_X, KK_1 };
+std::vector<WORD> vRaiseWeapon{ KK_X, KK_2 };
+std::vector<WORD> vSwordSalute{ KK_X, KK_3 };
+std::vector<WORD> vComeAtMe{ KK_X, KK_4 };
+std::vector<WORD> vThroatCut{ KK_X, KK_5 };
+std::vector<WORD> vSalute{ KK_X, KK_6 };
+std::vector<WORD> vFacepalm{ KK_X, KK_7 };
+std::vector<WORD> vSquat{ KK_X, KK_8 };
+std::vector<WORD> vYelling{ KK_X, KK_9 };
+
+//page 2
+std::vector<WORD> vCheer{ KK_X, KK_X, KK_1 };
+std::vector<WORD> vDance{ KK_X, KK_X, KK_2 };
+std::vector<WORD> vDisapprove{ KK_X, KK_X, KK_3 };
+std::vector<WORD> vShakeFist{ KK_X, KK_X, KK_4 };
+std::vector<WORD> vShrug{ KK_X, KK_X, KK_5 };
+std::vector<WORD> vWhatever{ KK_X, KK_X, KK_6 };
+std::vector<WORD> vRoar{ KK_X, KK_X, KK_7 };
+std::vector<WORD> vYield{ KK_X, KK_X, KK_8 };
+std::vector<WORD> vCower{ KK_X, KK_X, KK_9 };
+
+//page 3
+std::vector<WORD> vLaughing{ KK_X, KK_X, KK_X, KK_1 };
+std::vector<WORD> vPointBack{ KK_X, KK_X, KK_X, KK_2 };
+std::vector<WORD> vItsAllOver{ KK_X, KK_X, KK_X, KK_3 };
+std::vector<WORD> vBow{ KK_X, KK_X, KK_X, KK_4 };
+
 HHOOK hKeyboardHook;
 
-bool m_bLaughLoop;
-bool m_bEmoteLoop;
+bool bVoiceActionToggle;
+bool bEmoteLoop;
 
 void ghostInput(std::vector<WORD> v)
 {
@@ -59,17 +92,12 @@ void ghostInput(std::vector<WORD> v)
 		ip.ki.wVk = *itr;
 		ip.ki.dwFlags = KEYEVENTF_SCANCODE;
 
-
-		//std::cout << "sending " << *itr << std::endl;
-
 		//down
 		UINT ret = SendInput(1, &ip, sizeof(INPUT));
-//		std::cout << "keydown return " << ret << std::endl;
 
 		//up
 		ip.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP;
 		ret = SendInput(1, &ip, sizeof(INPUT));
-//		std::cout << "keyup return " << ret << std::endl;
 
 		//sleep
 		Sleep(SLEEP_DUR_MS);
@@ -80,38 +108,37 @@ void processKey(DWORD key)
 {
 	switch (key)
 	{
-	case VK_F1:
-		m_bLaughLoop ? printf("F1 Detected. Disabling Laugh Loop \n") : printf("F1 Detected. Enabling Laugh Loop \n");
-		m_bLaughLoop ? m_bLaughLoop = false : m_bLaughLoop = true;		
+	case VK_F1:  //toggle emotes and voices
+		bVoiceActionToggle ? bVoiceActionToggle = false : bVoiceActionToggle = true;
 		break;
 	case VK_F2:
-		printf("F2 Detected. Sending Help \n");
-		ghostInput(vHelp);
+		bVoiceActionToggle ? ghostInput(vHelp) : ghostInput(vComeAtMe);
 		break;
 	case VK_F3:
-		printf("F3 Detected. Sending Thank You\n");
-		ghostInput(vThank);
+		bVoiceActionToggle ? ghostInput(vThank) : ghostInput(vDance);
 		break;
 	case VK_F4:
-		printf("F4 Detected. Sending Respect\n");		
-		ghostInput(vRespect);
+		bVoiceActionToggle ? ghostInput(vRespect) : ghostInput(vRoar);
 		break;
 	case VK_F5:
-		printf("F5 Detected. Sending Hello  \n");
-		ghostInput(vHello);
+		bVoiceActionToggle ? ghostInput(vHello) : ghostInput(vBow);
 		break;
 	case VK_F6:
-		printf("F6 Detected. Sending Insult\n");
-		ghostInput(vInsult);
+		bVoiceActionToggle ? ghostInput(vInsult) : ghostInput(vYelling);
 		break;
 	case VK_F7:
-		printf("F7 Detected. Sending Intimidate\n");
-		ghostInput(vIntimidate);
+		bVoiceActionToggle ? ghostInput(vIntimidate) : ghostInput(vCower);
 		break;
-	case VK_F8:
-		m_bEmoteLoop ? printf("F8 Detected. Disabling Random Emote Loop \n") : printf("F8 Detected. Enabling Random Emote Loop \n");
-		m_bEmoteLoop ? m_bEmoteLoop = false : m_bEmoteLoop = true;
+	case VK_F8:   //always loop
+		if (bEmoteLoop)
+			cout << "F8 Detected. Disabling Random Emote Loop " << endl;
+		else
+			cout << "F8 Detected. Enabling Random Emote Loop" << endl;
+
+		bEmoteLoop ? bEmoteLoop = false : bEmoteLoop = true;
+
 		break;
+	
 	default:
 		break;
 	}
@@ -156,7 +183,7 @@ __declspec(dllexport) LRESULT CALLBACK KeyboardEvent(int nCode, WPARAM wParam, L
 		{
 			if (key == VK_F12)
 			{
-				printf("Terminating Intercept ( you pressed escape ) \n");
+				cout << "Terminating Intercept ( you pressed escape ) " << endl;
 				PostQuitMessage(0);
 			}
 
@@ -190,23 +217,6 @@ DWORD WINAPI my_HotKey(LPVOID lpParm)
 	return 0;
 }
 
-DWORD WINAPI my_LaughLoop(LPVOID lpParam)
-{
-	HINSTANCE hInstance = GetModuleHandle(NULL);
-
-	if (!hInstance) hInstance = LoadLibrary((LPCSTR)lpParam);
-	if (!hInstance) return 1;
-
-	while (true)
-	{
-		Sleep(LAUGH_SLEEP_MS);
-		if (m_bLaughLoop)
-		{
-			ghostInput(vLaugh);
-		}
-	}
-}
-
 void doEmoteInput()
 {
 	//randomly generate a number between 0 and 14
@@ -217,63 +227,48 @@ void doEmoteInput()
 	{
 		case 0:
 			ghostInput(vYes);
-			printf("Yes\n");
 			break;
 		case 1:
 			ghostInput(vNo);
-			printf("No\n");
 			break;
 		case 2:
 			ghostInput(vHelp);
-			printf("Help\n");
 			break;
 		case 3:
 			ghostInput(vInsult);
-			printf("Insult\n");
 			break;
 		case 4:
 			ghostInput(vIntimidate);		
-			printf("Intimidate\n");
 			break;
 		case 5:
 			ghostInput(vSorry);
-			printf("Sorry\n");
 			break;
 		case 6:
 			ghostInput(vLaugh);
-			printf("Laugh\n");
 			break;
 		case 7:
 			ghostInput(vThank);
-			printf("Thank\n");
 			break;
 		case 8:
 			ghostInput(vFriendlies);
-			printf("Friendlies\n");
 			break;
 		case 9:
 			ghostInput(vRetreat);
-			printf("Retreat\n");
 			break;
 		case 10:
 			ghostInput(vHold); 
-			printf("Hold\n");
 			break;
 		case 11:
 			ghostInput(vHello); 
-			printf("Hello\n");
 			break;
 		case 12:
 			ghostInput(vFollow); 
-			printf("Follow\n");
 			break;
 		case 13:
 			ghostInput(vRespect); 
-			printf("Respect\n");
 			break;
 		case 14:
 			ghostInput(vCharge); 
-			printf("Charge\n");
 			break;		
 		default:
 		break;
@@ -290,7 +285,7 @@ DWORD WINAPI my_EmoteLoop(LPVOID lpParam)
 	while (true)
 	{
 		Sleep(EMOTE_SLEEP_MS);
-		if (m_bEmoteLoop)
+		if (bEmoteLoop)
 		{
 			doEmoteInput();
 		}
@@ -307,21 +302,21 @@ int main(int argc, char* argv[])
 	DWORD dwLaughThread;
 	DWORD dwEmoteThread;
 
-	m_bLaughLoop = false;
-	m_bEmoteLoop = false;
+	
+	bEmoteLoop = false;
+	bVoiceActionToggle = true; //start with voice
 
-	printf("Launching Mordhau Macro Program 2.0. Hit 'F12' to cancel. \n");
-	printf("F1 Toggle Laugh Loop \n");
-	printf("F2 Help \n");
-	printf("F3 Thank You\n");
-	printf("F4 Respect\n");
-	printf("F5 Hello\n");
-	printf("F6 Insult\n");
-	printf("F7 Intimidate\n");
-	printf("F8 Toggle LoopRandom Emote\n");
+	cout << "Launching Mordhau Macro Program 2.0. Hit 'F12' to cancel. " << endl;
+	cout << "F1 Toggle Voice | Action " << endl;
+	cout << "F2 Help / Come At Me" << endl;
+	cout << "F3 Thank You | Dance " << endl;
+	cout << "F4 Respect | Roar" << endl;
+	cout << "F5 Hello | Bow " << endl;
+	cout << "F6 Insult | Yell " << endl;
+	cout << "F7 Intimidate | Cower " << endl;
+	cout << "F8 Toggle LoopRandom Emote " << endl;
 
 	hThread = CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)my_HotKey, (LPVOID)argv[0], NULL, &dwThread);
-	hLaughLoop = CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)my_LaughLoop, (LPVOID)argv[0], NULL, &dwLaughThread);
 	hEmoteLoop = CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)my_EmoteLoop, (LPVOID)argv[0], NULL, &dwEmoteThread);
 
 	//ShowWindow(FindWindowA("ConsoleWindowClass", NULL), false);
