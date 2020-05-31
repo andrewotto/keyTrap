@@ -6,10 +6,17 @@
 
 using namespace std;
 
+//loop control
+bool bVoiceActionToggle;
+bool bEmoteLoop;
+bool bPointLoop;
+bool bChargeLoop;
+
 //time between keypresses
-#define SLEEP_DUR_MS 100
-#define LAUGH_SLEEP_MS 3000
+#define SLEEP_DUR_MS 50
 #define EMOTE_SLEEP_MS 5000
+#define POINT_SLEEP_MS 150
+#define CHARGE_SLEEP_MS 50
 
 //im lazy
 #define KK_1  0x31
@@ -74,11 +81,10 @@ std::vector<WORD> vLaughing{ KK_X, KK_X, KK_X, KK_1 };
 std::vector<WORD> vPointBack{ KK_X, KK_X, KK_X, KK_2 };
 std::vector<WORD> vItsAllOver{ KK_X, KK_X, KK_X, KK_3 };
 std::vector<WORD> vBow{ KK_X, KK_X, KK_X, KK_4 };
+std::vector<WORD> vCharge2{ KK_X, KK_X, KK_X, KK_5 };
 
 HHOOK hKeyboardHook;
 
-bool bVoiceActionToggle;
-bool bEmoteLoop;
 
 void ghostInput(std::vector<WORD> v)
 {
@@ -136,9 +142,16 @@ void processKey(DWORD key)
 			cout << "F8 Detected. Enabling Random Emote Loop" << endl;
 
 		bEmoteLoop ? bEmoteLoop = false : bEmoteLoop = true;
-
 		break;
-	
+	case VK_F9: //spam throat cut
+		bEmoteLoop = false;
+		bPointLoop ? bPointLoop = false : bPointLoop = true;
+		break;
+	case VK_F10: //charge voice overlap
+		bEmoteLoop = false;
+		bPointLoop = false;
+		bChargeLoop ? bChargeLoop = false : bChargeLoop = true;
+		break;	
 	default:
 		break;
 	}
@@ -292,18 +305,55 @@ DWORD WINAPI my_EmoteLoop(LPVOID lpParam)
 	}
 }
 
+DWORD WINAPI my_PointLoop(LPVOID lpParam)
+{
+	HINSTANCE hInstance = GetModuleHandle(NULL);
+
+	if (!hInstance) hInstance = LoadLibrary((LPCSTR)lpParam);
+	if (!hInstance) return 1;
+
+	while (true)
+	{
+		Sleep(POINT_SLEEP_MS);
+		if (bPointLoop)
+		{
+			ghostInput(vThroatCut);
+		}
+	}
+}
+
+DWORD WINAPI my_ChargeLoop(LPVOID lpParam)
+{
+	HINSTANCE hInstance = GetModuleHandle(NULL);
+
+	if (!hInstance) hInstance = LoadLibrary((LPCSTR)lpParam);
+	if (!hInstance) return 1;
+
+	while (true)
+	{
+		Sleep(CHARGE_SLEEP_MS);
+		if (bChargeLoop)
+		{
+			ghostInput(vCharge2);
+		}
+	}
+}
+
 int main(int argc, char* argv[])
 {
 	HANDLE hThread;
-	HANDLE hLaughLoop;
 	HANDLE hEmoteLoop;
+	HANDLE hPointThread;
+	HANDLE hChargeThread;
 
 	DWORD dwThread;
-	DWORD dwLaughThread;
 	DWORD dwEmoteThread;
+	DWORD dwPointThread;
+	DWORD dwChargeThread;
 
-	
 	bEmoteLoop = false;
+	bPointLoop = false;
+	bChargeLoop = false;
 	bVoiceActionToggle = true; //start with voice
 
 	cout << "Launching Mordhau Macro Program 2.0. Hit 'F12' to cancel. " << endl;
@@ -315,9 +365,13 @@ int main(int argc, char* argv[])
 	cout << "F6 Insult | Yell " << endl;
 	cout << "F7 Intimidate | Cower " << endl;
 	cout << "F8 Toggle LoopRandom Emote " << endl;
+	cout << "F9 Toggle Point Loop " << endl;
+	cout << "F10 Toggle ChargeOverlap Loop " << endl;
 
 	hThread = CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)my_HotKey, (LPVOID)argv[0], NULL, &dwThread);
 	hEmoteLoop = CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)my_EmoteLoop, (LPVOID)argv[0], NULL, &dwEmoteThread);
+	hPointThread = CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)my_PointLoop, (LPVOID)argv[0], NULL, &dwPointThread);
+	hChargeThread = CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)my_ChargeLoop, (LPVOID)argv[0], NULL, &dwChargeThread);
 
 	//ShowWindow(FindWindowA("ConsoleWindowClass", NULL), false);
 	if (hThread) return WaitForSingleObject(hThread, INFINITE);
