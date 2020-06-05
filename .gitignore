@@ -1,10 +1,7 @@
 ﻿################################################################################
 # This .gitignore file was automatically created by Microsoft(R) Visual Studio.
 ################################################################################
-
-/.vs/keyTrap/v16/.suo
-/.vs/keyTrap/v16/Browse.VC.db
-/.vs/keyTrap/v16/Browse.VC.opendb
+/.vs
+/x64
 /keyTrap/keyTrap.vcxproj.filters
 /keyTrap/keyTrap.vcxproj.user
-/.vs/keyTrap/v16/ipch/AutoPCH/d953ee1219732a28/MAIN.ipch
