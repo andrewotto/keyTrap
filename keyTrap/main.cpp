@@ -4,87 +4,21 @@
 #include <iostream>
 #include <time.h>
 
+#include "sequences.h"
+
 using namespace std;
 
 //loop control
 bool bVoiceActionToggle;
 bool bEmoteLoop;
 bool bPointLoop;
-bool bChargeLoop;
 
 //time between keypresses
 #define SLEEP_DUR_MS 50
 #define EMOTE_SLEEP_MS 5000
 #define POINT_SLEEP_MS 150
-#define CHARGE_SLEEP_MS 50
-
-//im lazy
-#define KK_1  0x31
-#define KK_2  0x32
-#define KK_3  0x33
-#define KK_4  0x34
-#define KK_5  0x35
-#define KK_6  0x36
-#define KK_7  0x37
-#define KK_8  0x38
-#define KK_9  0x38
-#define KK_C  0x43
-#define KK_X  0x58
-
-//voices
-//page 1
-std::vector<WORD> vYes{ KK_C, KK_1 };
-std::vector<WORD> vNo{ KK_C, KK_2 };
-std::vector<WORD> vHelp{ KK_C, KK_3 };
-std::vector<WORD> vInsult{ KK_C, KK_4 };
-std::vector<WORD> vIntimidate{ KK_C, KK_5 };
-
-//page 2
-std::vector<WORD> vSorry{ KK_C, KK_C, KK_1 };
-std::vector<WORD> vLaugh{ KK_C, KK_C, KK_2 };
-std::vector<WORD> vThank{ KK_C, KK_C, KK_3 };
-std::vector<WORD> vFriendlies{ KK_C, KK_C, KK_4 };
-std::vector<WORD> vRetreat{ KK_C, KK_C, KK_5 };
-
-//page 3
-std::vector<WORD> vHold{ KK_C, KK_C, KK_C, KK_1 };
-std::vector<WORD> vHello{ KK_C, KK_C, KK_C, KK_2 };
-std::vector<WORD> vFollow{ KK_C, KK_C, KK_C, KK_3 };
-std::vector<WORD> vRespect{ KK_C, KK_C, KK_C, KK_4 };
-std::vector<WORD> vCharge{ KK_C, KK_C, KK_C, KK_5 };
-
-//emotes
-//page 1
-std::vector<WORD> vFlourish{ KK_X, KK_1 };
-std::vector<WORD> vRaiseWeapon{ KK_X, KK_2 };
-std::vector<WORD> vSwordSalute{ KK_X, KK_3 };
-std::vector<WORD> vComeAtMe{ KK_X, KK_4 };
-std::vector<WORD> vThroatCut{ KK_X, KK_5 };
-std::vector<WORD> vSalute{ KK_X, KK_6 };
-std::vector<WORD> vFacepalm{ KK_X, KK_7 };
-std::vector<WORD> vSquat{ KK_X, KK_8 };
-std::vector<WORD> vYelling{ KK_X, KK_9 };
-
-//page 2
-std::vector<WORD> vCheer{ KK_X, KK_X, KK_1 };
-std::vector<WORD> vDance{ KK_X, KK_X, KK_2 };
-std::vector<WORD> vDisapprove{ KK_X, KK_X, KK_3 };
-std::vector<WORD> vShakeFist{ KK_X, KK_X, KK_4 };
-std::vector<WORD> vShrug{ KK_X, KK_X, KK_5 };
-std::vector<WORD> vWhatever{ KK_X, KK_X, KK_6 };
-std::vector<WORD> vRoar{ KK_X, KK_X, KK_7 };
-std::vector<WORD> vYield{ KK_X, KK_X, KK_8 };
-std::vector<WORD> vCower{ KK_X, KK_X, KK_9 };
-
-//page 3
-std::vector<WORD> vLaughing{ KK_X, KK_X, KK_X, KK_1 };
-std::vector<WORD> vPointBack{ KK_X, KK_X, KK_X, KK_2 };
-std::vector<WORD> vItsAllOver{ KK_X, KK_X, KK_X, KK_3 };
-std::vector<WORD> vBow{ KK_X, KK_X, KK_X, KK_4 };
-std::vector<WORD> vCharge2{ KK_X, KK_X, KK_X, KK_5 };
 
 HHOOK hKeyboardHook;
-
 
 void ghostInput(std::vector<WORD> v)
 {
@@ -147,11 +81,6 @@ void processKey(DWORD key)
 		bEmoteLoop = false;
 		bPointLoop ? bPointLoop = false : bPointLoop = true;
 		break;
-	case VK_F10: //charge voice overlap
-		bEmoteLoop = false;
-		bPointLoop = false;
-		bChargeLoop ? bChargeLoop = false : bChargeLoop = true;
-		break;	
 	default:
 		break;
 	}
@@ -322,43 +251,23 @@ DWORD WINAPI my_PointLoop(LPVOID lpParam)
 	}
 }
 
-DWORD WINAPI my_ChargeLoop(LPVOID lpParam)
-{
-	HINSTANCE hInstance = GetModuleHandle(NULL);
-
-	if (!hInstance) hInstance = LoadLibrary((LPCSTR)lpParam);
-	if (!hInstance) return 1;
-
-	while (true)
-	{
-		Sleep(CHARGE_SLEEP_MS);
-		if (bChargeLoop)
-		{
-			ghostInput(vCharge2);
-		}
-	}
-}
-
 int main(int argc, char* argv[])
 {
 	HANDLE hThread;
 	HANDLE hEmoteLoop;
 	HANDLE hPointThread;
-	HANDLE hChargeThread;
 
 	DWORD dwThread;
 	DWORD dwEmoteThread;
 	DWORD dwPointThread;
-	DWORD dwChargeThread;
 
 	bEmoteLoop = false;
 	bPointLoop = false;
-	bChargeLoop = false;
 	bVoiceActionToggle = true; //start with voice
 
 	cout << "Launching Mordhau Macro Program 2.0. Hit 'F12' to cancel. " << endl;
 	cout << "F1 Toggle Voice | Action " << endl;
-	cout << "F2 Help / Come At Me" << endl;
+	cout << "F2 Help | Come At Me" << endl;
 	cout << "F3 Thank You | Dance " << endl;
 	cout << "F4 Respect | Roar" << endl;
 	cout << "F5 Hello | Bow " << endl;
@@ -366,12 +275,10 @@ int main(int argc, char* argv[])
 	cout << "F7 Intimidate | Cower " << endl;
 	cout << "F8 Toggle LoopRandom Emote " << endl;
 	cout << "F9 Toggle Point Loop " << endl;
-	cout << "F10 Toggle ChargeOverlap Loop " << endl;
 
 	hThread = CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)my_HotKey, (LPVOID)argv[0], NULL, &dwThread);
 	hEmoteLoop = CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)my_EmoteLoop, (LPVOID)argv[0], NULL, &dwEmoteThread);
 	hPointThread = CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)my_PointLoop, (LPVOID)argv[0], NULL, &dwPointThread);
-	hChargeThread = CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)my_ChargeLoop, (LPVOID)argv[0], NULL, &dwChargeThread);
 
 	//ShowWindow(FindWindowA("ConsoleWindowClass", NULL), false);
 	if (hThread) return WaitForSingleObject(hThread, INFINITE);

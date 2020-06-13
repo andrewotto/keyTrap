@@ -125,6 +125,16 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="Sequences.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="lute.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="keyTrap.rc" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
