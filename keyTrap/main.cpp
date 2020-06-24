@@ -9,18 +9,39 @@
 using namespace std;
 
 //loop control
-bool bVoiceActionToggle;
+bool bVoiceToggle;
 bool bEmoteLoop;
 bool bPointLoop;
+bool bSpazLoop;
 
 //time between keypresses
 #define SLEEP_DUR_MS 50
+//time between random emotes
 #define EMOTE_SLEEP_MS 5000
+//time between point actions
 #define POINT_SLEEP_MS 150
+//time between mouse circular loops
+#define SPAZ_SLEEP_MS 25
+
+//MOVE ME
+#define RADIUS 80000
 
 HHOOK hKeyboardHook;
 
-void ghostInput(std::vector<WORD> v)
+void ghostMouse(LONG dx, LONG dy)
+{
+	INPUT ip;
+	ip.type = INPUT_MOUSE;
+	ip.mi.dwFlags = MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE;
+	ip.mi.dx = dx;
+	ip.mi.dy = dy;
+	ip.mi.mouseData = 0;
+	ip.mi.dwExtraInfo = 0;
+	ip.mi.time = 0;
+	UINT ret = SendInput(1, &ip, sizeof(INPUT));
+}
+
+void ghostKeySequence(std::vector<WORD> v)
 {
 	for (std::vector<WORD>::iterator itr = v.begin(); itr != v.end(); ++itr)
 	{
@@ -44,30 +65,97 @@ void ghostInput(std::vector<WORD> v)
 	}
 }
 
+
+void randomEmote()
+{
+	//randomly generate a number between 0 and 14
+	srand(time(NULL));
+	int iRandom = rand() % 14;
+
+	switch (iRandom)
+	{
+	case 0:
+		ghostKeySequence(vYes);
+		break;
+	case 1:
+		ghostKeySequence(vNo);
+		break;
+	case 2:
+		ghostKeySequence(vHelp);
+		break;
+	case 3:
+		ghostKeySequence(vInsult);
+		break;
+	case 4:
+		ghostKeySequence(vIntimidate);
+		break;
+	case 5:
+		ghostKeySequence(vSorry);
+		break;
+	case 6:
+		ghostKeySequence(vLaugh);
+		break;
+	case 7:
+		ghostKeySequence(vThank);
+		break;
+	case 8:
+		ghostKeySequence(vFriendlies);
+		break;
+	case 9:
+		ghostKeySequence(vRetreat);
+		break;
+	case 10:
+		ghostKeySequence(vHold);
+		break;
+	case 11:
+		ghostKeySequence(vHello);
+		break;
+	case 12:
+		ghostKeySequence(vFollow);
+		break;
+	case 13:
+		ghostKeySequence(vRespect);
+		break;
+	case 14:
+		ghostKeySequence(vCharge);
+		break;
+	default:
+		break;
+	}
+}
+
 void processKey(DWORD key)
 {
 	switch (key)
 	{
 	case VK_F1:  //toggle emotes and voices
-		bVoiceActionToggle ? bVoiceActionToggle = false : bVoiceActionToggle = true;
+		if (bVoiceToggle) {
+			bVoiceToggle = false;
+			ghostKeySequence(vYes);
+		}
+		else
+		{
+			bVoiceToggle = true;
+			ghostKeySequence(vNo);
+		}
 		break;
 	case VK_F2:
-		bVoiceActionToggle ? ghostInput(vHelp) : ghostInput(vComeAtMe);
+		bVoiceToggle ? ghostKeySequence(vHelp) : ghostKeySequence(vThumbsUp);
 		break;
 	case VK_F3:
-		bVoiceActionToggle ? ghostInput(vThank) : ghostInput(vDance);
+		bVoiceToggle ? ghostKeySequence(vThank) : ghostKeySequence(vThumbsDown);
 		break;
 	case VK_F4:
-		bVoiceActionToggle ? ghostInput(vRespect) : ghostInput(vRoar);
+		bVoiceToggle ? ghostKeySequence(vNo) : ghostKeySequence(vRoar);
 		break;
 	case VK_F5:
-		bVoiceActionToggle ? ghostInput(vHello) : ghostInput(vBow);
+		bVoiceToggle ? ghostKeySequence(vHello) : ghostKeySequence(vBow);
 		break;
 	case VK_F6:
-		bVoiceActionToggle ? ghostInput(vInsult) : ghostInput(vYelling);
+		bVoiceToggle ? ghostKeySequence(vInsult) : ghostKeySequence(vYelling);
 		break;
 	case VK_F7:
-		bVoiceActionToggle ? ghostInput(vIntimidate) : ghostInput(vCower);
+		bVoiceToggle ? ghostKeySequence(vIntimidate) : ghostKeySequence(vCower);
 		break;
 	case VK_F8:   //always loop
 		if (bEmoteLoop)
@@ -80,6 +168,12 @@ void processKey(DWORD key)
 	case VK_F9: //spam throat cut
 		bEmoteLoop = false;
 		bPointLoop ? bPointLoop = false : bPointLoop = true;
+		break;
+	case VK_F10:
+		//capture point TBD cycle in the loop not here
+		//bEmoteLoop = false;
+		bPointLoop = false;
+		bSpazLoop ? bSpazLoop = false : bSpazLoop = true;
 		break;
 	default:
 		break;
@@ -147,7 +241,7 @@ void MessageLoop()
 	}
 }
 
-DWORD WINAPI my_HotKey(LPVOID lpParm)
+DWORD WINAPI hotKeyLoop(LPVOID lpParm)
 {
 	HINSTANCE hInstance = GetModuleHandle(NULL);
 	if (!hInstance) hInstance = LoadLibrary((LPCSTR)lpParm);
@@ -159,65 +253,7 @@ DWORD WINAPI my_HotKey(LPVOID lpParm)
 	return 0;
 }
 
-void doEmoteInput()
-{
-	//randomly generate a number between 0 and 14
-	srand(time(NULL));
-	int iRandom = rand() % 14;
-
-	switch(iRandom)
-	{
-		case 0:
-			ghostInput(vYes);
-			break;
-		case 1:
-			ghostInput(vNo);
-			break;
-		case 2:
-			ghostInput(vHelp);
-			break;
-		case 3:
-			ghostInput(vInsult);
-			break;
-		case 4:
-			ghostInput(vIntimidate);		
-			break;
-		case 5:
-			ghostInput(vSorry);
-			break;
-		case 6:
-			ghostInput(vLaugh);
-			break;
-		case 7:
-			ghostInput(vThank);
-			break;
-		case 8:
-			ghostInput(vFriendlies);
-			break;
-		case 9:
-			ghostInput(vRetreat);
-			break;
-		case 10:
-			ghostInput(vHold); 
-			break;
-		case 11:
-			ghostInput(vHello); 
-			break;
-		case 12:
-			ghostInput(vFollow); 
-			break;
-		case 13:
-			ghostInput(vRespect); 
-			break;
-		case 14:
-			ghostInput(vCharge); 
-			break;		
-		default:
-		break;
-	}
-}
-
-DWORD WINAPI my_EmoteLoop(LPVOID lpParam)
+DWORD WINAPI emoteLoop(LPVOID lpParam)
 {
 	HINSTANCE hInstance = GetModuleHandle(NULL);
 
@@ -229,12 +265,12 @@ DWORD WINAPI my_EmoteLoop(LPVOID lpParam)
 		Sleep(EMOTE_SLEEP_MS);
 		if (bEmoteLoop)
 		{
-			doEmoteInput();
+			randomEmote();
 		}
 	}
 }
 
-DWORD WINAPI my_PointLoop(LPVOID lpParam)
+DWORD WINAPI pointLoop(LPVOID lpParam)
 {
 	HINSTANCE hInstance = GetModuleHandle(NULL);
 
@@ -246,41 +282,67 @@ DWORD WINAPI my_PointLoop(LPVOID lpParam)
 		Sleep(POINT_SLEEP_MS);
 		if (bPointLoop)
 		{
-			ghostInput(vThroatCut);
+			ghostKeySequence(vThroatCut);
+		}
+	}
+}
+
+DWORD WINAPI spazLoop(LPVOID lpParam)
+{
+	HINSTANCE hInstance = GetModuleHandle(NULL);
+	POINT centerScreen;
+
+	centerScreen.x = GetSystemMetrics(SM_CXSCREEN) / 2;
+	centerScreen.y = GetSystemMetrics(SM_CYSCREEN) / 2;
+	
+	if (!hInstance) hInstance = LoadLibrary((LPCSTR)lpParam);
+	if (!hInstance) return 1;
+
+	while (true)
+	{
+		Sleep(SPAZ_SLEEP_MS);
+
+		if ( bSpazLoop )
+		{ 
+			ghostKeySequence(vComeAtMe);			
+
+				for (double d = 0; d < 360.0; d+=.25)
+				{
+					if (!bSpazLoop) break;
+
+					LONG dx = (centerScreen.x * (65536 / GetSystemMetrics(SM_CXSCREEN))) + (RADIUS * cos(d));
+					LONG dy = (centerScreen.y * (65536 / GetSystemMetrics(SM_CYSCREEN))) + (RADIUS * sin(d));
+
+					//cout << "cur.x= " << point.x << " cur.y= " << point.y << std::endl;
+					//ccc3cout << "dx= " << dx << " dy= " << dy << " deg= " << d << std::endl;
+
+					ghostMouse(dx, dy);
+					Sleep(1);					
+				}			
 		}
 	}
 }
 
 int main(int argc, char* argv[])
 {
-	HANDLE hThread;
-	HANDLE hEmoteLoop;
-	HANDLE hPointThread;
-
-	DWORD dwThread;
-	DWORD dwEmoteThread;
-	DWORD dwPointThread;
+	HANDLE hThread, hEmoteLoop, hPointThread, hSpazThread;
+	DWORD dwThread, dwEmoteThread, dwPointThread, dwSpazThread;
 
 	bEmoteLoop = false;
 	bPointLoop = false;
-	bVoiceActionToggle = true; //start with voice
+	bSpazLoop = false;
+	bVoiceToggle = true; //start with voice
 
-	cout << "Launching Mordhau Macro Program 2.0. Hit 'F12' to cancel. " << endl;
-	cout << "F1 Toggle Voice | Action " << endl;
-	cout << "F2 Help | Come At Me" << endl;
-	cout << "F3 Thank You | Dance " << endl;
-	cout << "F4 Respect | Roar" << endl;
-	cout << "F5 Hello | Bow " << endl;
-	cout << "F6 Insult | Yell " << endl;
-	cout << "F7 Intimidate | Cower " << endl;
-	cout << "F8 Toggle LoopRandom Emote " << endl;
-	cout << "F9 Toggle Point Loop " << endl;
+	cout << "Launching Mordhau Macro Program 2.0." << endl << "F1 Toggle Voice | Action " << endl << "F2 Help | Come At Me" << endl
+		<< "F3 Thank You | Dance " << endl << "F4 No | Roar" << endl << "F5 Hello | Bow " << endl << "F6 Insult | Yell " << endl << "F7 Intimidate | Cower "
+		<< endl << "F8 Toggle LoopRandom Emote " << endl << "F9 Toggle Point Loop " << endl << "F10 Toggle Spaz" << endl << "F12 Exit";
 
-	hThread = CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)my_HotKey, (LPVOID)argv[0], NULL, &dwThread);
-	hEmoteLoop = CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)my_EmoteLoop, (LPVOID)argv[0], NULL, &dwEmoteThread);
-	hPointThread = CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)my_PointLoop, (LPVOID)argv[0], NULL, &dwPointThread);
-
-	//ShowWindow(FindWindowA("ConsoleWindowClass", NULL), false);
+	hThread = CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)hotKeyLoop, (LPVOID)argv[0], NULL, &dwThread);
+	hEmoteLoop = CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)emoteLoop, (LPVOID)argv[0], NULL, &dwEmoteThread);
+	hPointThread = CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)pointLoop, (LPVOID)argv[0], NULL, &dwPointThread);
+	hSpazThread = CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)spazLoop, (LPVOID)argv[0], NULL, &dwSpazThread);
+	
+	//wait on main thread
 	if (hThread) return WaitForSingleObject(hThread, INFINITE);
 	else return 1;
 	

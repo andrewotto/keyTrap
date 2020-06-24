@@ -62,4 +62,7 @@ std::vector<WORD> vLaughing{ KK_X, KK_X, KK_X, KK_1 };
 std::vector<WORD> vPointBack{ KK_X, KK_X, KK_X, KK_2 };
 std::vector<WORD> vItsAllOver{ KK_X, KK_X, KK_X, KK_3 };
 std::vector<WORD> vBow{ KK_X, KK_X, KK_X, KK_4 };
-std::vector<WORD> vCharge2{ KK_X, KK_X, KK_X, KK_5 };
+std::vector<WORD> vWave{ KK_X, KK_X, KK_X, KK_5 };
+std::vector<WORD> vPoint{ KK_X, KK_X, KK_X, KK_6 };
+std::vector<WORD> vThumbsUp{ KK_X, KK_X, KK_X, KK_7 };
+std::vector<WORD> vThumbsDown{ KK_X, KK_X, KK_X, KK_8 };

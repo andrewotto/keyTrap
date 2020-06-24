@@ -1,0 +1,6 @@
+﻿  main.cpp
+C:\Users\robot\source\repos\keyTrap\keyTrap\main.cpp(51,12): warning C4244: 'initializing': conversion from 'double' to 'LONG', possible loss of data
+C:\Users\robot\source\repos\keyTrap\keyTrap\main.cpp(52,12): warning C4244: 'initializing': conversion from 'double' to 'LONG', possible loss of data
+C:\Users\robot\source\repos\keyTrap\keyTrap\main.cpp(210,12): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
+C:\Users\robot\source\repos\keyTrap\keyTrap\main.cpp(322,48): warning C4101: 'dwSpazThread': unreferenced local variable
+  keyTrap.vcxproj -> C:\Users\robot\source\repos\keyTrap\x64\Debug\keyTrap.exe
